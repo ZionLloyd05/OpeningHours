@@ -1,0 +1,43 @@
+{
+	"info": {
+		"_postman_id": "6690de30-0aa9-4d72-adf0-c84011c47be2",
+		"name": "OpenHours",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "https://localhost:44374/",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "resturantSchedulesFile",
+							"type": "file",
+							"src": "/C:\\Work\\Builds\\Interviews\\GA\\OpeningHours.Core\\testSchedule.json"
+						}
+					],
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://localhost:44374/",
+					"protocol": "https",
+					"host": [
+						"localhost"
+					],
+					"port": "44374",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

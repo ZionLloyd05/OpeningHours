@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using OpeningHours.Core.Models;
-using OpeningHours.Core.Models.DTOs;
 
 namespace OpeningHours.Core.Services
 {
@@ -18,36 +15,55 @@ namespace OpeningHours.Core.Services
     {
         // in-app cache
         private static Hashtable timeStore = new Hashtable();
-         
-        public ICollection<FormattedScheduleForReturnDTO> FormatSchedule
+
+        public string FormatSchedule
             (IFormFile resturantSchedulesFile)
         {
 
-            IEnumerable<IDictionary<string, List<OpeningHour>>> resturantSchedules = 
+            IEnumerable<IDictionary<string, List<OpeningHour>>> resturantSchedules =
                 FetchResturantSchedulesFromFile(resturantSchedulesFile);
 
+            StringBuilder readableSchedule = new StringBuilder();
+
             //var stopWatch = Stopwatch.StartNew();
-            //var formattedSchedule = new List<FormattedScheduleForReturnDTO>();
+            var resturantScheduleList = resturantSchedules.ToList();
 
-            //foreach (var schedule in resturantSchedules)
-            //{
-            //    formattedSchedule.Add(new FormattedScheduleForReturnDTO
-            //    {
-            //        FormattedSchedule = Format(schedule)
-            //    });
-            //}
+            for (int i = 0; i < resturantScheduleList.Count - 1; i++)
+            {
+                var schedule = resturantScheduleList[i];
+                var formattedSchedule = Format(schedule);
 
+                var scheduleKey = schedule.Keys.FirstOrDefault();
 
-            var formattedSchedule = resturantSchedules
-                .Select(schedule => new FormattedScheduleForReturnDTO
+                var scheduleHours = schedule[scheduleKey];
+
+                if (scheduleHours.Count > 0)
                 {
-                    FormattedSchedule = Format(schedule)
-                }).ToList();
+                    var status = scheduleHours[scheduleHours.Count - 1].Type.ToLower();
 
-            //Debug.WriteLine(stopWatch.Elapsed);
+                    if (status == "open")
+                    {
+                        var nextSchedule = resturantScheduleList[i + 1];
+                        var nextScheduleHours = nextSchedule[nextSchedule.Keys.FirstOrDefault()];
+                        var formattedNextScheduleFirstTime = GetFormattedTime(nextScheduleHours[0]);
 
-            return formattedSchedule;
-            
+                        formattedSchedule.Append($"{formattedNextScheduleFirstTime}");
+                    }
+                }
+
+                formattedSchedule.Append("\n");
+                readableSchedule.Append(formattedSchedule);
+            }
+
+            //append last one manually
+            var lastSchedule = resturantScheduleList[resturantScheduleList.Count - 1];
+            var formattedLastSchedule = Format(lastSchedule);
+
+            readableSchedule.Append(formattedLastSchedule);
+
+
+            return readableSchedule.ToString();
+
         }
 
         #region HelperMethods
@@ -63,7 +79,7 @@ namespace OpeningHours.Core.Services
             IEnumerable<IDictionary<string, List<OpeningHour>>> resturantSchedules = new List<IDictionary<string, List<OpeningHour>>>();
 
             try
-            {                
+            {
                 resturantSchedules = JsonConvert.DeserializeObject<IEnumerable<IDictionary<string, List<OpeningHour>>>>(jsonFromFile);
 
             }
@@ -75,7 +91,7 @@ namespace OpeningHours.Core.Services
             return resturantSchedules;
         }
 
-        private static string Format(IDictionary<string, List<OpeningHour>> schedule)
+        private static StringBuilder Format(IDictionary<string, List<OpeningHour>> schedule)
         {
             StringBuilder formattedSchedule = new StringBuilder(String.Empty);
             TextInfo textFormatter = new CultureInfo("en-US", false).TextInfo;
@@ -84,43 +100,56 @@ namespace OpeningHours.Core.Services
             var weekDay = textFormatter.ToTitleCase(key);
             var openingHours = schedule[key];
 
-            if(openingHours.Count == 0) {
+            if (openingHours.Count == 0)
+            {
                 formattedSchedule.Append($"{weekDay}: Closed");
-                return formattedSchedule.ToString();
+                return formattedSchedule;
             }
 
             formattedSchedule.Append($"{weekDay}: ");
 
             var openingHoursList = openingHours.ToList();
 
-            for (int i = 0; i < openingHoursList.Count; i++) {
+            for (int i = 0; i < openingHoursList.Count; i++)
+            {
                 var hour = openingHoursList[i];
                 var convertedTime = GetFormattedTime(hour);
 
-                if (openingHours.Count > 1) {
-                    if ((i + 1) == openingHours.Count) {
-                        formattedSchedule.Append($"{convertedTime}");
-                    } else {
-                        if ((i + 1) % 2 != 0) {
-                            formattedSchedule.Append($"{convertedTime} - ");
-                        } else {
-                            formattedSchedule.Append($"{convertedTime} , ");
-                        }
+                var status = hour.Type.ToLower();
+
+
+                if (i == 0 && status == "close")
+                {
+                    continue;
+                }
+                else
+                {
+                    if (status == "open")
+                    {
+                        formattedSchedule.Append($"{convertedTime} - ");
                     }
-                } else {
-                    formattedSchedule.Append($"{convertedTime}");
+                    else
+                    {
+                        if (status == "close" && (i + 1) == openingHoursList.Count)
+                            formattedSchedule.Append($"{convertedTime}");
+                        else
+                            formattedSchedule.Append($"{convertedTime} ,");
+                    }
                 }
             }
-            return formattedSchedule.ToString();
+            return formattedSchedule;
         }
 
         private static string GetFormattedTime(OpeningHour hour)
         {
             var convertedTime = String.Empty;
 
-            if (timeStore.ContainsKey(hour.Value)) {
+            if (timeStore.ContainsKey(hour.Value))
+            {
                 convertedTime = timeStore[hour.Value].ToString();
-            } else {
+            }
+            else
+            {
                 convertedTime = String.Format("{0:t}", ConvertUnixTimeStampToDateTime(hour.Value));
                 timeStore[hour.Value] = convertedTime;
             }

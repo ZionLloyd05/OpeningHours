@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -31,8 +33,10 @@ namespace OpeningHours.Core
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "OpeningHours.Core", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "OpeningHours.Core", Version = "v1" });                
             });
+
+           
 
             services.AddScoped<IScheduleFormatter, ScheduleFormatter>();
         }
