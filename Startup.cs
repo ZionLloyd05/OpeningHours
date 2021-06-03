@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using OpeningHours.Core.Services;
 
 namespace OpeningHours.Core
 {
@@ -32,6 +33,8 @@ namespace OpeningHours.Core
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "OpeningHours.Core", Version = "v1" });
             });
+
+            services.AddScoped<IScheduleFormatter, ScheduleFormatter>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
