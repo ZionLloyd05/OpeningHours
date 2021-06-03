@@ -41,7 +41,8 @@ namespace OpeningHours.Core.Services
                 if (scheduleHours.Count > 0)
                 {
                     var status = scheduleHours[scheduleHours.Count - 1].Type.ToLower();
-
+                    
+                    //checking if the last open hour's type is open, the there should be an overlapping close in the next schedule
                     if (status == "open")
                     {
                         var nextSchedule = resturantScheduleList[i + 1];

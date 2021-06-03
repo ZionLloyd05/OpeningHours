@@ -37,3 +37,6 @@ E.g.
 
 This way in my opinion, there would not be a need for double loops, more like 
 flattening up the data and all operation can be done in a linear time, In my opinion.
+
+#### Few Assumption made
+1. Any schedule that ends with open, will always have it's close type in the next schedule
