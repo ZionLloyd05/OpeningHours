@@ -37,6 +37,7 @@ namespace OpeningHours.Core.Services
 
                 var scheduleHours = schedule[scheduleKey];
 
+                //checking for overlapping close time
                 if (scheduleHours.Count > 0)
                 {
                     var status = scheduleHours[scheduleHours.Count - 1].Type.ToLower();
@@ -113,13 +114,15 @@ namespace OpeningHours.Core.Services
             for (int i = 0; i < openingHoursList.Count; i++)
             {
                 var hour = openingHoursList[i];
+
                 var convertedTime = GetFormattedTime(hour);
 
                 var status = hour.Type.ToLower();
 
-
+                
                 if (i == 0 && status == "close")
                 {
+                    //escape overlapping close hour
                     continue;
                 }
                 else
@@ -133,7 +136,7 @@ namespace OpeningHours.Core.Services
                         if (status == "close" && (i + 1) == openingHoursList.Count)
                             formattedSchedule.Append($"{convertedTime}");
                         else
-                            formattedSchedule.Append($"{convertedTime} ,");
+                            formattedSchedule.Append($"{convertedTime}, ");
                     }
                 }
             }
